@@ -15,8 +15,8 @@ Use this README for ALFWorld-specific setup and behavior. For shared DockerGym A
 ### 1) Build the ALFWorld worker image (one-time)
 
 ```bash
-DOCKERFILE_DIR=$(python -c "import dockergym.envs.alfworld, os; print(os.path.dirname(dockergym.envs.alfworld.__file__))")
-docker build -t alfworld-text:latest "$DOCKERFILE_DIR"
+REPO_ROOT=$(python -c "import dockergym, os; print(os.path.dirname(os.path.dirname(dockergym.__file__)))")
+docker build -t alfworld-text:latest -f "$REPO_ROOT/dockergym/envs/alfworld/Dockerfile" "$REPO_ROOT"
 ```
 
 ### 2) Download ALFWorld data (one-time)

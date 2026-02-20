@@ -38,6 +38,7 @@ class Session:
     last_active_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _read_buffer: str = ""
+    _raw_buffer: bytes = b""
 
 
 class SessionManager:
@@ -184,46 +185,63 @@ class SessionManager:
             if remaining <= 0:
                 raise TimeoutError("Timeout reading from container")
 
-            # Check for complete line in buffer
-            if "\n" in buf:
+            # Check for complete line in buffer (skip empty lines)
+            while "\n" in buf:
                 line, rest = buf.split("\n", 1)
-                session._read_buffer = rest
-                return self._extract_json_line(line)
+                buf = rest
+                line = line.strip()
+                if line:
+                    session._read_buffer = buf
+                    return self._extract_json_line(line)
 
             ready, _, _ = select.select([sock], [], [], min(remaining, 1.0))
             if ready:
                 data = sock.recv(4096)
                 if not data:
                     raise ConnectionError("Container closed connection")
-                buf += self._decode_docker_stream(data)
+                # Accumulate raw bytes, decode only complete Docker frames
+                session._raw_buffer += data
+                decoded, consumed = self._decode_docker_stream(session._raw_buffer)
+                session._raw_buffer = session._raw_buffer[consumed:]
+                buf += decoded
 
-    def _decode_docker_stream(self, data: bytes) -> str:
+    def _decode_docker_stream(self, data: bytes) -> tuple:
         """Decode Docker multiplexed stream data.
 
         Docker attach streams use an 8-byte header per frame:
         [stream_type(1), 0, 0, 0, size(4)] followed by the payload.
+
+        Returns:
+            (decoded_text, bytes_consumed) — stops at incomplete frames so
+            the caller can buffer the remainder for the next recv().
         """
         result = []
         pos = 0
-        raw = data
 
-        while pos < len(raw):
-            if pos + 8 <= len(raw):
-                stream_type = raw[pos]
-                if stream_type in (0, 1, 2):
-                    size = int.from_bytes(raw[pos + 4 : pos + 8], "big")
-                    if pos + 8 + size <= len(raw) and size > 0:
-                        payload = raw[pos + 8 : pos + 8 + size]
-                        if stream_type in (0, 1):  # stdin or stdout
-                            result.append(payload.decode("utf-8", errors="replace"))
-                        pos += 8 + size
-                        continue
+        while pos < len(data):
+            # Need at least 8 bytes for a frame header
+            if pos + 8 > len(data):
+                break
 
-            # Fallback: treat rest as raw text
-            result.append(raw[pos:].decode("utf-8", errors="replace"))
-            break
+            stream_type = data[pos]
+            if stream_type not in (0, 1, 2):
+                # Not a Docker frame — treat rest as raw text
+                result.append(data[pos:].decode("utf-8", errors="replace"))
+                pos = len(data)
+                break
 
-        return "".join(result)
+            size = int.from_bytes(data[pos + 4 : pos + 8], "big")
+
+            # Need the full payload before we can decode this frame
+            if pos + 8 + size > len(data):
+                break
+
+            if size > 0 and stream_type in (0, 1):  # stdout
+                payload = data[pos + 8 : pos + 8 + size]
+                result.append(payload.decode("utf-8", errors="replace"))
+            pos += 8 + size
+
+        return "".join(result), pos
 
     def _extract_json_line(self, line: str) -> str:
         """Extract valid JSON from a line that may have docker framing artifacts."""

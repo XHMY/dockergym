@@ -23,6 +23,7 @@ Rules:
 """
 
 import json
+import os
 import sys
 from abc import ABC, abstractmethod
 
@@ -75,8 +76,15 @@ class BaseWorker(ABC):
 
     def run(self):
         """Main loop: read JSON commands from stdin, dispatch to handlers."""
-        # Redirect stdout to stderr so library logs don't pollute the protocol
-        self._real_stdout = sys.stdout
+        # Redirect stdout to stderr so library logs don't pollute the protocol.
+        # Step 1: Duplicate fd 1 so we keep a private channel for JSON output.
+        protocol_fd = os.dup(1)
+        # Step 2: Point fd 1 → stderr so native code / JVM / subprocesses
+        #         writing to fd 1 go to stderr, not the protocol pipe.
+        os.dup2(2, 1)
+        # Step 3: Build a Python file object on the saved fd for _send().
+        self._real_stdout = os.fdopen(protocol_fd, "w")
+        # Step 4: Also redirect Python-level sys.stdout to stderr.
         sys.stdout = sys.stderr
 
         initialized = False
