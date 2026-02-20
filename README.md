@@ -1,4 +1,4 @@
-# DockerGym
+# 🐳 DockerGym
 
 Wrap Dockerized gym-like environments behind a REST API. DockerGym manages container lifecycle, session state, request batching, and worker I/O so you can focus on environment logic.
 
@@ -156,6 +156,8 @@ You can customize the skill by editing `SKILL.md` or the templates to match your
 ## Implement a custom environment
 
 ### Build a Docker image
+
+> **Prerequisite:** Docker Engine must be installed on your system. See the [official install guide](https://docs.docker.com/engine/install/) for instructions.
 
 The Docker image packages your environment and its dependencies. Inside the image you need the `BaseWorker` class, but you do **not** need the full `dockergym` package — `BaseWorker` is self-contained and relies only on the Python standard library. Copy the single file instead of `pip install`-ing the whole package:
 
