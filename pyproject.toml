@@ -7,13 +7,15 @@ name = "dockergym"
 version = "0.1.0"
 description = "Wrap any Docker-containerized gym-like environment into a REST API"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
     "fastapi>=0.100.0",
     "uvicorn[standard]>=0.20.0",
     "pydantic>=2.0",
     "docker>=7.0.0",
+    "tqdm",
+    "joblib"
 ]
 
 [project.optional-dependencies]

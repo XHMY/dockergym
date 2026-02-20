@@ -39,8 +39,8 @@ docker build -t alfworld-text:latest "$DOCKERFILE_DIR"
 ### 3. Download ALFWorld data
 
 ```bash
-export ALFWORLD_DATA=~/.cache/alfworld
-alfworld-download
+docker run --rm -v ~/.cache/alfworld:/data alfworld-text:latest \
+  bash -c "pip install alfworld && alfworld-download"
 ```
 
 ### 4. Start the server
@@ -48,7 +48,6 @@ alfworld-download
 ```bash
 python -m dockergym.envs.alfworld \
     --data-volume ~/.cache/alfworld:/data:ro \
-    --max-sessions 8 \
     --port 8000
 ```
 

@@ -77,6 +77,12 @@ def main():
     parts[0] = str(Path(parts[0]).expanduser())
     data_volume = ":".join(parts)
 
+    # Ensure ALFWORLD_DATA points to the host data path so that
+    # discover_game_files() can resolve $ALFWORLD_DATA in base_config.yaml.
+    # Inside the container this is set by the Dockerfile (ENV ALFWORLD_DATA=/data),
+    # but on the host we derive it from the --data-volume argument.
+    os.environ.setdefault("ALFWORLD_DATA", parts[0])
+
     # Build volumes list: data volume + package directory for worker.py
     volumes = [data_volume]
     volumes.append(f"{env_package_dir}:/app/alfworld_env:ro")

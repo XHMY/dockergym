@@ -9,7 +9,8 @@ DockerGym handles Docker container lifecycle, session management, request batchi
 ### 1. Install
 
 ```bash
-pip install -e dockergym/
+git clone https://github.com/XHMY/dockergym.git
+cd dockergym && pip install -e .
 ```
 
 ### 2. Implement a worker
