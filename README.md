@@ -9,6 +9,7 @@ DockerGym manages container lifecycle, session state, request batching, and work
 - Want a working demo quickly: follow **Quick Start: Run ALFWorld** below.
 - Need ALFWorld-specific details: see [`dockergym/envs/alfworld/README.md`](dockergym/envs/alfworld/README.md).
 - Building your own environment: see **Implement a custom environment** in this file.
+- Using Claude Code to migrate an environment automatically: see **Add an environment with Claude Code** below.
 
 ## Quick Start: Run ALFWorld
 
@@ -17,15 +18,15 @@ This is the fastest path to a successful end-to-end run.
 ### Architecture (ALFWorld)
 
 ```
-                ┌──────────────────────────┐
+               ┌───────────────────────────┐
 Client A ────► │    DockerGym Server       │
 Client B ────► │  SessionManager + Batcher │
 Client C ────► │       (docker-py)         │
-                └──┬────────┬────────┬──────┘
-                   │        │        │  stdin/stdout
-                ┌──▼──┐  ┌──▼──┐  ┌──▼──┐
-                │ C1  │  │ C2  │  │ C3  │  Docker containers
-                └─────┘  └─────┘  └─────┘  (alfworld-text)
+               └──┬────────┬────────┬──────┘
+                  │        │        │  stdin/stdout
+               ┌──▼──┐  ┌──▼──┐  ┌──▼──┐
+               │ C1  │  │ C2  │  │ C3  │  Docker containers
+               └─────┘  └─────┘  └─────┘  (alfworld-text)
 ```
 
 ### 1) Install
@@ -39,7 +40,7 @@ pip install -e .
 ### 2) One-time ALFWorld setup
 
 ```bash
-# Build the ALFWorld worker image
+# Build the ALFWorld worker image ( This step takes ~834.1s to install all dependencies inside docker)
 DOCKERFILE_DIR=$(python -c "import dockergym.envs.alfworld, os; print(os.path.dirname(dockergym.envs.alfworld.__file__))")
 docker build -t alfworld-text:latest "$DOCKERFILE_DIR"
 
@@ -139,6 +140,79 @@ config = ServerConfig(
 )
 app = create_app(config, hooks=MyHooks())
 ```
+
+## Add an environment with Claude Code
+
+This repository ships a [Claude Code skill](https://code.claude.com/docs/en/skills) that automates environment migration. Instead of manually creating all the files described above, you can point Claude Code at an existing environment and let it scaffold everything for you.
+
+### Prerequisites
+
+- [Claude Code](https://code.claude.com) installed and configured.
+- This repository cloned locally.
+
+### Usage
+
+Open a Claude Code session inside this repository and describe the environment you want to add. The skill activates automatically when Claude detects you're asking to add, migrate, or port an environment. You can also invoke it explicitly:
+
+```
+/add-environment
+```
+
+**Example prompt:**
+
+```
+/add-environment Add the ScienceWorld environment (https://github.com/allenai/ScienceWorld) to this repo.
+It's a text-based virtual environment for elementary science tasks, installed via
+`pip install scienceworld`. It requires Java 1.8+. Tasks are selected by task name
+(e.g. "boil", "melt") and variation index. Each step takes a text action and returns
+an observation string, score, and list of valid actions.
+```
+
+### What the skill does
+
+Claude reads the target environment's source code, then creates a complete package under `dockergym/envs/<env_name>/` following the same structure as the ALFWorld reference implementation:
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Package marker |
+| `worker.py` | Adapts the environment's `reset()`/`step()` to the DockerGym worker protocol |
+| `app.py` | Host-side hooks for environment discovery and session creation |
+| `__main__.py` | CLI entry point with argparse (`python -m dockergym.envs.<env_name>`) |
+| `Dockerfile` | Builds a Docker image with the environment and all its dependencies |
+| `example.py` | Example client with single-session and concurrent-session demos |
+| `README.md` | Build, setup, run, and troubleshooting instructions |
+
+### What you do after
+
+Once Claude finishes, follow the generated `README.md` to build, run, and test. For example, if you added [ScienceWorld](https://github.com/allenai/ScienceWorld):
+
+1. **Build the Docker image:**
+
+```bash
+DOCKERFILE_DIR=$(python -c "import dockergym.envs.scienceworld, os; print(os.path.dirname(dockergym.envs.scienceworld.__file__))")
+docker build -t scienceworld:latest "$DOCKERFILE_DIR"
+```
+
+2. **Start the server:**
+
+```bash
+python -m dockergym.envs.scienceworld --port 8000
+```
+
+3. **Run the example client:**
+
+```bash
+python -m dockergym.envs.scienceworld.example --base-url http://localhost:8000
+```
+
+### Skill internals
+
+The skill lives at [`.claude/skills/add-environment/`](.claude/skills/add-environment/) and contains:
+
+- `SKILL.md` — the main instructions Claude follows (8 phases from context gathering through verification).
+- `templates/` — skeleton files for every component, derived from the ALFWorld implementation.
+
+You can customize the skill by editing `SKILL.md` or the templates to match your team's conventions.
 
 ## API Endpoints
 
