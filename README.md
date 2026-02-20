@@ -1,8 +1,6 @@
 # DockerGym
 
-Wrap Dockerized gym-like environments behind a REST API.
-
-DockerGym manages container lifecycle, session state, request batching, and worker I/O so you can focus on environment logic.
+Wrap Dockerized gym-like environments behind a REST API. DockerGym manages container lifecycle, session state, request batching, and worker I/O so you can focus on environment logic.
 
 ## Documentation Map
 
