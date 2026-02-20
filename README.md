@@ -272,7 +272,26 @@ app = create_app(config, hooks=MyHooks())
 | `GET`    | `/environments`       | List available environments |
 | `GET`    | `/health`             | Server health check         |
 
+### List Environments
+
+Fetch all available environment IDs, then create a session with a specific one:
+
+```bash
+curl http://localhost:8000/environments
+```
+
+Response:
+
+```json
+{
+  "environments": ["env-1", "env-2", "env-3"],
+  "total": 3
+}
+```
+
 ### Create Session
+
+Omit `env_id` to let the server pick randomly, or pass a specific ID from the list above:
 
 ```bash
 curl -X POST http://localhost:8000/sessions \

@@ -185,7 +185,16 @@ def single_session_demo(base_url: str):
     """Run one session with a random agent, using synchronous requests."""
     print("=== Single Session Demo ===\n")
 
-    with Session(base_url) as session:
+    r = requests.get(f"{base_url}/environments")
+    r.raise_for_status()
+    env_data = r.json()
+    game_files = env_data["environments"]
+    print(f"Available game files: {env_data['total']}")
+
+    chosen = random.choice(game_files)
+    print(f"Chosen:  {chosen.split('/')[-2]}\n")
+
+    with Session(base_url, env_id=chosen) as session:
         sid = session["session_id"]
         game_file = session.get("info", {}).get("game_file", "unknown")
         print(f"Session: {sid[:8]}...")
@@ -317,7 +326,7 @@ def main():
         print("Start it with: python -m dockergym.envs.alfworld")
         sys.exit(1)
 
-    # single_session_demo(args.base_url)
+    single_session_demo(args.base_url)
     concurrent_sessions_demo(args.base_url, n=args.concurrent, total_jobs=args.total_jobs)
 
 
