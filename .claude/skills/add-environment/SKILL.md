@@ -122,7 +122,7 @@ Must include:
 
 1. `argparse` argument parser with at least:
    - `--docker-image` (default: `<env_name>:latest`)
-   - `--max-sessions` (default: 64)
+   - `--max-sessions` (default: 1024)
    - `--host` (default: `0.0.0.0`)
    - `--port` (default: 8000)
    - `--idle-timeout`

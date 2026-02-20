@@ -230,7 +230,7 @@ python -m dockergym \
   --docker-image my-env:latest \
   --worker-command python -u /app/my_worker.py \
   --volume ./data:/data:ro \
-  --max-sessions 64 \
+  --max-sessions 1024 \
   --port 8000
 ```
 

@@ -75,7 +75,7 @@ curl -X POST http://localhost:8000/sessions \
 ```bash
 python -m dockergym.envs.<env_name> \
   --docker-image <env_name>:latest \
-  --max-sessions 64 \
+  --max-sessions 1024 \
   --batch-window-ms 50 \
   --idle-timeout 120 \
   --host 0.0.0.0 \

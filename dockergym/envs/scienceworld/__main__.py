@@ -20,8 +20,8 @@ def main():
         help="Docker image for worker containers (default: scienceworld:latest)",
     )
     parser.add_argument(
-        "--max-sessions", type=int, default=64,
-        help="Maximum concurrent sessions (default: 64)",
+        "--max-sessions", type=int, default=1024,
+        help="Maximum concurrent sessions (default: 1024)",
     )
     parser.add_argument(
         "--batch-window-ms", type=int, default=50,

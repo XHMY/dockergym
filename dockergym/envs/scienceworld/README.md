@@ -99,7 +99,7 @@ Both the session creation response and each step response include an `info` dict
 ```bash
 python -m dockergym.envs.scienceworld \
   --docker-image scienceworld:latest \
-  --max-sessions 64 \
+  --max-sessions 1024 \
   --batch-window-ms 50 \
   --idle-timeout 120 \
   --host 0.0.0.0 \

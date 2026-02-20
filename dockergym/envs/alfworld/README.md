@@ -96,7 +96,7 @@ python -m dockergym.envs.alfworld \
   --config base_config.yaml \
   --docker-image alfworld-text:latest \
   --data-volume ~/.cache/alfworld:/data:ro \
-  --max-sessions 64 \
+  --max-sessions 1024 \
   --batch-window-ms 50 \
   --idle-timeout 120 \
   --host 0.0.0.0 \
