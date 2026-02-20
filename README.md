@@ -82,6 +82,49 @@ For full ALFWorld options and troubleshooting, see [`dockergym/envs/alfworld/REA
 
 ## Implement a custom environment
 
+### Build a Docker image
+
+The Docker image packages your environment and its dependencies. Inside the image you need the `BaseWorker` class, but you do **not** need the full `dockergym` package — `BaseWorker` is self-contained and relies only on the Python standard library. Copy the single file instead of `pip install`-ing the whole package:
+
+```dockerfile
+# Install dockergym BaseWorker (minimal — only stdlib, no extra dependencies)
+COPY dockergym/worker.py /app/dockergym/
+RUN printf 'from dockergym.worker import BaseWorker\n__all__ = ["BaseWorker"]\n' > /app/dockergym/__init__.py
+ENV PYTHONPATH=/app
+```
+
+This keeps your image small and avoids pulling in server-side dependencies (FastAPI, docker-py, etc.) that are only needed on the host.
+
+A complete Dockerfile typically looks like this:
+
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    git build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dockergym BaseWorker (minimal — only stdlib, no extra dependencies)
+COPY dockergym/worker.py /app/dockergym/
+RUN printf 'from dockergym.worker import BaseWorker\n__all__ = ["BaseWorker"]\n' > /app/dockergym/__init__.py
+ENV PYTHONPATH=/app
+
+# Install your environment's own dependencies
+RUN pip install --no-cache-dir <target_package>
+
+COPY dockergym/envs/<env_name>/worker.py /app/worker.py
+CMD ["python", "-u", "/app/worker.py"]
+```
+
+> **Note:** The build context must be the repo root so `COPY` can reach `dockergym/worker.py`. Build with:
+>
+> ```bash
+> docker build -t my-env:latest -f dockergym/envs/<env_name>/Dockerfile .
+> ```
+
+See [`.claude/skills/add-environment/templates/Dockerfile`](.claude/skills/add-environment/templates/Dockerfile) for a full annotated template.
+
 ### Create a worker
 
 The worker runs **inside** the Docker container. Subclass `BaseWorker`:
