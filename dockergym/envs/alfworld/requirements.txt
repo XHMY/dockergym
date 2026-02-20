@@ -1,2 +1,0 @@
-textworld[pddl]>=1.6.1
-pyyaml

@@ -22,13 +22,8 @@ A predefined DockerGym environment that wraps [ALFWorld](https://github.com/alfw
 
 ## Quick Start
 
-### 1. Install
 
-```bash
-pip install dockergym[alfworld]
-```
-
-### 2. Build the Docker image
+### 1. Build the Docker image
 
 ```bash
 # Find the Dockerfile bundled with the package
@@ -36,14 +31,14 @@ DOCKERFILE_DIR=$(python -c "import dockergym.envs.alfworld; import os; print(os.
 docker build -t alfworld-text:latest "$DOCKERFILE_DIR"
 ```
 
-### 3. Download ALFWorld data
+### 2. Download ALFWorld data
 
 ```bash
 docker run --rm -v ~/.cache/alfworld:/data alfworld-text:latest \
   bash -c "pip install alfworld && alfworld-download"
 ```
 
-### 4. Start the server
+### 3. Start the server
 
 ```bash
 python -m dockergym.envs.alfworld \
@@ -51,7 +46,7 @@ python -m dockergym.envs.alfworld \
     --port 8000
 ```
 
-### 5. Health check
+### 4. Health check
 
 ```bash
 curl http://localhost:8000/health

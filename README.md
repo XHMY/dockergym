@@ -13,7 +13,20 @@ git clone https://github.com/XHMY/dockergym.git
 cd dockergym && pip install -e .
 ```
 
-### 2. Implement a worker
+### 2. Predefined Environments
+
+DockerGym ships with ready-to-use environment packages. Install the extras you need:
+
+#### ALFWorld
+
+Interactive TextWorld environments for household tasks.
+
+See [`dockergym/envs/alfworld/README.md`](dockergym/envs/alfworld/README.md) for full documentation.
+
+
+## Implement a custom environment
+
+### Create a worker
 
 The worker runs **inside** the Docker container. Subclass `BaseWorker`:
 
@@ -34,7 +47,7 @@ if __name__ == "__main__":
     MyWorker().run()
 ```
 
-### 3. Run the server
+### Run the server
 
 ```bash
 python -m dockergym \
@@ -140,26 +153,7 @@ ERROR: ← {"status": "error", "message": "..."}
 - Extra keys are passed through to the API's `info` dict
 - The server accepts `score` as an alias for `reward` (backward compatibility)
 
-## Predefined Environments
 
-DockerGym ships with ready-to-use environment packages. Install the extras you need:
-
-### ALFWorld
-
-Interactive TextWorld environments for household tasks.
-
-```bash
-pip install dockergym[alfworld]
-
-# Build the Docker image
-DOCKERFILE_DIR=$(python -c "import dockergym.envs.alfworld; import os; print(os.path.dirname(dockergym.envs.alfworld.__file__))")
-docker build -t alfworld-text:latest "$DOCKERFILE_DIR"
-
-# Start the server
-python -m dockergym.envs.alfworld --data-volume ~/.cache/alfworld:/data:ro
-```
-
-See [`dockergym/envs/alfworld/README.md`](dockergym/envs/alfworld/README.md) for full documentation.
 
 ## Configuration
 
