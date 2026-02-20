@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dockergym"
+version = "0.1.0"
+description = "Wrap any Docker-containerized gym-like environment into a REST API"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+    "pydantic>=2.0",
+    "docker>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+alfworld = ["pyyaml>=5.0"]
+
+[tool.setuptools.packages.find]
+include = ["dockergym*"]
+
+[tool.setuptools.package-data]
+"dockergym.envs.alfworld" = ["Dockerfile", "*.yaml", "*.txt", "*.md", "example.py"]
